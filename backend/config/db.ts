@@ -3,6 +3,9 @@
  */
 import mongoose from 'mongoose';
 
+// Fail fast in containerized environments without active MongoDB
+mongoose.set('bufferCommands', false);
+
 export interface DbStatus {
   isConnected: boolean;
   host?: string;

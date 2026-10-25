@@ -65,10 +65,11 @@ export async function login(req: Request, res: Response, next: NextFunction) {
       { expiresIn: '24h' }
     );
 
+    const isProduction = process.env.NODE_ENV === 'production';
     res.cookie('admin_token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: isProduction,
+      sameSite: isProduction ? 'none' : 'lax',
       maxAge: 24 * 60 * 60 * 1000,
     });
 
@@ -88,7 +89,12 @@ export async function login(req: Request, res: Response, next: NextFunction) {
 }
 
 export function logout(req: Request, res: Response) {
-  res.clearCookie('admin_token');
+  const isProduction = process.env.NODE_ENV === 'production';
+  res.clearCookie('admin_token', {
+    httpOnly: true,
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
+  });
   return res.json({
     success: true,
     message: 'Logged out successfully',

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Phone, Mail, Instagram, Facebook, Linkedin, Youtube, Shield } from 'lucide-react';
+import { MapPin, Phone, Mail, Instagram, Youtube, Shield } from 'lucide-react';
+import { FaWhatsapp } from 'react-icons/fa';
 
 export default function Footer() {
   return (
@@ -15,17 +16,43 @@ export default function Footer() {
             <p className="text-sm text-[#78716C] leading-relaxed">
               Pioneering ultra-luxury real estate advisory services across Mumbai and Pune. Specializing in landmark penthouses, historic estates, and waterfront residences for discerning UHNWIs.
             </p>
-            <div className="flex items-center gap-4 pt-2 text-[#D4AF37]">
-              <a href="https://www.instagram.com/shantanu_patil_02_?dlrf=dTN2OGY4bmJqaWx0&utm_source=qr" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="hover:text-white transition-colors p-2 bg-[#2C2825] rounded-full">
+            <div className="flex items-center gap-3 pt-2 text-[#D4AF37]">
+              <a
+                href="https://www.instagram.com/shantanu_patil_02_?dlrf=dTN2OGY4bmJqaWx0&utm_source=qr"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Instagram"
+                title="Instagram: @shantanu_patil_02_"
+                className="hover:text-white transition-colors p-2 bg-[#2C2825] rounded-full hover:bg-[#D4AF37] hover:scale-105 active:scale-95"
+              >
                 <Instagram className="w-4 h-4" />
               </a>
-              <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="hover:text-white transition-colors p-2 bg-[#2C2825] rounded-full">
-                <Facebook className="w-4 h-4" />
+              <a
+                href="https://wa.me/918080489984?text=Hi%2C%20I%20visited%20your%20portfolio!%20of%20Prime%20Properties"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="WhatsApp"
+                title="WhatsApp: +91 8080489984"
+                className="hover:text-white transition-colors p-2 bg-[#2C2825] rounded-full hover:bg-[#D4AF37] hover:scale-105 active:scale-95"
+              >
+                <FaWhatsapp className="w-4 h-4" />
               </a>
-              <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="hover:text-white transition-colors p-2 bg-[#2C2825] rounded-full">
-                <Linkedin className="w-4 h-4" />
+              <a
+                href="mailto:shantanupatil636@gmail.com"
+                aria-label="Email"
+                title="Email: shantanupatil636@gmail.com"
+                className="hover:text-white transition-colors p-2 bg-[#2C2825] rounded-full hover:bg-[#D4AF37] hover:scale-105 active:scale-95"
+              >
+                <Mail className="w-4 h-4" />
               </a>
-              <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="hover:text-white transition-colors p-2 bg-[#2C2825] rounded-full">
+              <a
+                href="https://youtube.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="YouTube"
+                title="YouTube Channel"
+                className="hover:text-white transition-colors p-2 bg-[#2C2825] rounded-full hover:bg-[#D4AF37] hover:scale-105 active:scale-95"
+              >
                 <Youtube className="w-4 h-4" />
               </a>
             </div>

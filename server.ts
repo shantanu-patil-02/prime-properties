@@ -9,6 +9,7 @@ import { createServer as createViteServer } from 'vite';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -21,11 +22,13 @@ const PORT = Number(process.env.PORT) || 3000;
 
 async function startServer() {
   // Configure DNS before importing modules that use MongoDB.
-  const dns = await import('node:dns');
-
-  dns.setServers(['8.8.8.8', '8.8.4.4']);
-
-  console.log('[DNS] Public DNS resolvers configured');
+  try {
+    const dns = await import('node:dns');
+    dns.setServers(['8.8.8.8', '8.8.4.4']);
+    console.log('[DNS] Public DNS resolvers configured');
+  } catch (dnsErr) {
+    console.warn('[DNS] Notice: Using system default DNS resolvers:', dnsErr);
+  }
 
   // Load backend modules only after DNS configuration.
   const [
@@ -193,15 +196,23 @@ async function startServer() {
   // Centralized error handler
   app.use(errorHandler);
 
-  // Vite development middleware
-  const vite = await createViteServer({
-    server: {
-      middlewareMode: true,
-    },
-    appType: 'spa',
-  });
+  const distPath = path.resolve(__dirname, 'dist');
+  if (process.env.NODE_ENV === 'production' && fs.existsSync(distPath)) {
+    app.use(express.static(distPath));
+    app.get('*', (_req, res) => {
+      res.sendFile(path.resolve(distPath, 'index.html'));
+    });
+  } else {
+    // Vite development middleware
+    const vite = await createViteServer({
+      server: {
+        middlewareMode: true,
+      },
+      appType: 'spa',
+    });
 
-  app.use(vite.middlewares);
+    app.use(vite.middlewares);
+  }
 
   app.listen(PORT, '0.0.0.0', () => {
     console.log(
