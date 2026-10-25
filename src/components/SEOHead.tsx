@@ -12,7 +12,7 @@ interface SEOHeadProps {
 export default function SEOHead({
   title = 'Prime Properties — Luxury Real Estate Pune & Mumbai',
   description = 'Discover exclusive ultra-luxury flats, sea-facing penthouses, and private estates for rent and sale in Mumbai and Pune with Prime Properties.',
-  ogImage = '/src/assets/images/hero_luxury_mumbai_pune_1792781619397.jpg',
+  ogImage = '/images/hero_luxury_mumbai_pune_1792781619397.jpg',
   ogType = 'website',
   canonicalUrl,
   jsonLd,

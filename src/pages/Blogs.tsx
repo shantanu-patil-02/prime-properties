@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Blog } from '../types';
 import SEOHead from '../components/SEOHead';
+import { getImageUrl, FALLBACK_BLOG_IMAGE } from '../utils/image';
 
 const CATEGORIES = ['All', 'Market Trends', 'Architecture', 'Investment', 'Pune', 'Mumbai'];
 
@@ -140,8 +141,11 @@ export default function Blogs() {
               <div className="bg-white rounded-2xl overflow-hidden border border-[#D4AF37]/40 shadow-md hover:shadow-xl transition-all duration-300 grid grid-cols-1 lg:grid-cols-12 group">
                 <div className="lg:col-span-7 aspect-[16/10] lg:aspect-auto overflow-hidden relative">
                   <img
-                    src={featuredBlog.coverImage}
+                    src={getImageUrl(featuredBlog.coverImage, FALLBACK_BLOG_IMAGE)}
                     alt={featuredBlog.title}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = FALLBACK_BLOG_IMAGE;
+                    }}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                     referrerPolicy="no-referrer"
                   />
@@ -206,8 +210,11 @@ export default function Blogs() {
                   >
                     <Link to={`/blogs/${blog.slug}`} className="block aspect-[16/10] overflow-hidden bg-[#F2EFE9]">
                       <img
-                        src={blog.coverImage}
+                        src={getImageUrl(blog.coverImage, FALLBACK_BLOG_IMAGE)}
                         alt={blog.title}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = FALLBACK_BLOG_IMAGE;
+                        }}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         referrerPolicy="no-referrer"
                       />

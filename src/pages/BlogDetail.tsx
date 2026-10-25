@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { Blog, Property } from '../types';
 import SEOHead from '../components/SEOHead';
+import { getImageUrl, FALLBACK_BLOG_IMAGE } from '../utils/image';
 import PropertyCard from '../components/PropertyCard';
 
 export default function BlogDetail() {
@@ -116,7 +117,7 @@ export default function BlogDetail() {
       name: 'Prime Properties',
       logo: {
         '@type': 'ImageObject',
-        url: 'https://primeproperties.in/src/assets/images/hero_luxury_mumbai_pune_1792781619397.jpg',
+        url: 'https://primeproperties.in/images/hero_luxury_mumbai_pune_1792781619397.jpg',
       },
     },
     datePublished: blog.createdAt,
@@ -233,8 +234,11 @@ export default function BlogDetail() {
           {/* Hero Image */}
           <div className="relative aspect-[16/9] rounded-2xl overflow-hidden shadow-lg border border-[#D4AF37]/30">
             <img
-              src={blog.coverImage}
+              src={getImageUrl(blog.coverImage, FALLBACK_BLOG_IMAGE)}
               alt={blog.title}
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = FALLBACK_BLOG_IMAGE;
+              }}
               className="w-full h-full object-cover"
               referrerPolicy="no-referrer"
             />

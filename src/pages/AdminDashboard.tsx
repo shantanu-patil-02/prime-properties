@@ -32,10 +32,10 @@ import {
 import { Property, Inquiry, Blog } from '../types';
 
 const APPROVED_LUXURY_IMAGES = [
-  { label: 'Worli Mumbai Penthouse', path: '/src/assets/images/property_penta_mumbai_1792781621423.jpg' },
-  { label: 'Koregaon Park Pune Villa', path: '/src/assets/images/property_villa_pune_1792781620081.jpg' },
-  { label: 'Bandra West Residence', path: '/src/assets/images/property_residence_bandra_1792781620671.jpg' },
-  { label: 'Mumbai & Pune Skyline', path: '/src/assets/images/hero_luxury_mumbai_pune_1792781619397.jpg' },
+  { label: 'Worli Mumbai Penthouse', path: '/images/property_penta_mumbai_1792781621423.jpg' },
+  { label: 'Koregaon Park Pune Villa', path: '/images/property_villa_pune_1792781620081.jpg' },
+  { label: 'Bandra West Residence', path: '/images/property_residence_bandra_1792781620671.jpg' },
+  { label: 'Mumbai & Pune Skyline', path: '/images/hero_luxury_mumbai_pune_1792781619397.jpg' },
 ];
 
 export default function AdminDashboard() {
@@ -77,7 +77,7 @@ export default function AdminDashboard() {
     bedrooms: 3,
     bathrooms: 3,
     areaSqFt: 2200,
-    images: ['/src/assets/images/property_residence_bandra_1792781620671.jpg'],
+    images: ['/images/property_residence_bandra_1792781620671.jpg'],
     amenities: 'Sea Facing, Modular Kitchen, 24/7 Security, 2 Covered Parking',
     isPublished: true,
     isFeatured: true,
@@ -259,7 +259,7 @@ export default function AdminDashboard() {
         bedrooms: 3,
         bathrooms: 3,
         areaSqFt: 2200,
-        images: ['/src/assets/images/property_residence_bandra_1792781620671.jpg'],
+        images: ['/images/property_residence_bandra_1792781620671.jpg'],
         amenities: 'Sea Facing, Modular Kitchen, 24/7 Security, 2 Covered Parking',
         isPublished: true,
         isFeatured: true,

@@ -82,6 +82,13 @@ async function startServer() {
     })
   );
 
+  // Serve static images for both /images and legacy /src/assets/images
+  const publicImages = path.resolve(__dirname, 'public/images');
+  if (fs.existsSync(publicImages)) {
+    app.use('/images', express.static(publicImages));
+    app.use('/src/assets/images', express.static(publicImages));
+  }
+
   // Initialize MongoDB
   const dbStatus = await connectDB();
 

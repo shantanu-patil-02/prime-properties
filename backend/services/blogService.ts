@@ -23,7 +23,7 @@ Key drivers include:
 
 ### Advisory Perspective
 For HNIs holding unencumbered luxury flats in South and West Mumbai, the rental market currently offers optimal yields while positioning the asset for long-term compounding capital appreciation.`,
-    coverImage: '/src/assets/images/hero_luxury_mumbai_pune_1792781619397.jpg',
+    coverImage: '/images/hero_luxury_mumbai_pune_1792781619397.jpg',
     category: 'Market Trends',
     author: 'Shantanu Patil, Managing Director',
     isPublished: true,
@@ -49,7 +49,7 @@ Highlights of the current prime bungalow market:
 
 ### Prime Properties Advisory
 Prime Properties maintains off-market discretion for private bungalow acquisitions, ensuring both buyers and legacy owners complete transactions with absolute institutional confidentiality.`,
-    coverImage: '/src/assets/images/property_villa_pune_1792781620081.jpg',
+    coverImage: '/images/property_villa_pune_1792781620081.jpg',
     category: 'Pune',
     author: 'Prime Properties Advisory Desk',
     isPublished: true,
@@ -76,7 +76,7 @@ NRI purchasers must channel acquisition funds through inward remittances via nor
 
 ### 3. Power of Attorney (POA) Best Practices
 For overseas clients unable to travel to Mumbai or Pune for physical registration, Prime Properties coordinates consulate-adjudicated specific Power of Attorney documentation, enabling authorized representatives to execute biometric verification seamlessly.`,
-    coverImage: '/src/assets/images/property_penta_mumbai_1792781621423.jpg',
+    coverImage: '/images/property_penta_mumbai_1792781621423.jpg',
     category: 'Investment',
     author: 'Shantanu Patil, Managing Director',
     isPublished: true,
@@ -99,7 +99,7 @@ Designing outdoor private decks and infinity pools atop super-tall skyscrapers r
 - **Travertine & Teak Longevity**: Specialized marine-grade sealants that protect imported European natural stone from monsoon salt spray.
 
 Prime Properties partners with premier architectural practices to advise collectors on both acquiring and transforming iconic duplex and triplex sky residences.`,
-    coverImage: '/src/assets/images/property_residence_bandra_1792781620671.jpg',
+    coverImage: '/images/property_residence_bandra_1792781620671.jpg',
     category: 'Architecture',
     author: 'Prime Properties Design Studio',
     isPublished: true,

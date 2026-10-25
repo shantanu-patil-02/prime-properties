@@ -2,21 +2,28 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Bed, Bath, Square, ArrowUpRight } from 'lucide-react';
 import { Property } from '../types';
+import { getImageUrl, FALLBACK_PROPERTY_IMAGE } from '../utils/image';
 
 interface PropertyCardProps {
   property: Property;
 }
 
 export default function PropertyCard({ property }: PropertyCardProps) {
+  const imageUrl = getImageUrl(property.images?.[0]);
+
   return (
     <div className="luxury-card-hover group bg-white rounded-xl overflow-hidden border border-[#D4AF37]/25 shadow-sm flex flex-col">
       {/* Image Container */}
       <div className="relative aspect-[4/3] overflow-hidden bg-[#F2EFE9]">
         <img
-          src={property.images[0] || 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=800&q=80'}
+          src={imageUrl}
           alt={property.title}
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = FALLBACK_PROPERTY_IMAGE;
+          }}
           className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
           referrerPolicy="no-referrer"
+          loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-90 transition-opacity duration-300" />
         

@@ -50,8 +50,11 @@ export default function About() {
         </div>
         <div className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-[#D4AF37]/30 shadow-xl">
           <img
-            src="/src/assets/images/about_luxury_team_1792781620873.jpg"
+            src="/images/about_luxury_team_1792781620873.jpg"
             alt="Prime Properties Team"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1200&q=80';
+            }}
             className="w-full h-full object-cover"
             referrerPolicy="no-referrer"
           />

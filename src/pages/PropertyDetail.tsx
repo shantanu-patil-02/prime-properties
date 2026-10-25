@@ -4,6 +4,7 @@ import axios from 'axios';
 import { MapPin, Bed, Bath, Square, CheckCircle2, ArrowLeft, ShieldCheck, Phone, Mail } from 'lucide-react';
 import { Property } from '../types';
 import SEOHead from '../components/SEOHead';
+import { getImageUrl, FALLBACK_PROPERTY_IMAGE } from '../utils/image';
 
 export default function PropertyDetail() {
   const { id } = useParams();
@@ -158,8 +159,11 @@ export default function PropertyDetail() {
       <div className="space-y-4">
         <div className="aspect-[16/9] rounded-2xl overflow-hidden bg-[#F2EFE9] border border-[#D4AF37]/30 shadow-lg">
           <img
-            src={property.images[activeImageIndex] || property.images[0]}
+            src={getImageUrl(property.images[activeImageIndex] || property.images[0])}
             alt={property.title}
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = FALLBACK_PROPERTY_IMAGE;
+            }}
             className="w-full h-full object-cover"
             referrerPolicy="no-referrer"
           />
@@ -174,7 +178,15 @@ export default function PropertyDetail() {
                   activeImageIndex === idx ? 'border-[#D4AF37] scale-105 shadow-md' : 'border-transparent opacity-70 hover:opacity-100'
                 }`}
               >
-                <img src={img} alt="" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                <img
+                  src={getImageUrl(img)}
+                  alt=""
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = FALLBACK_PROPERTY_IMAGE;
+                  }}
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                />
               </button>
             ))}
           </div>

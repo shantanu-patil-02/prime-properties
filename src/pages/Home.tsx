@@ -182,8 +182,11 @@ export default function Home() {
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden bg-[#1A1816]">
         <div className="absolute inset-0 z-0">
           <img
-            src="/src/assets/images/hero_luxury_mumbai_pune_1792781619397.jpg"
+            src="/images/hero_luxury_mumbai_pune_1792781619397.jpg"
             alt="Luxury Mumbai & Pune Real Estate"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=1600&q=80';
+            }}
             className="w-full h-full object-cover opacity-40 scale-105 transition-transform duration-10000 ease-out hover:scale-110"
             referrerPolicy="no-referrer"
           />

@@ -23,8 +23,8 @@ let memoryProperties: any[] = [
     bathrooms: 4,
     areaSqFt: 3200,
     images: [
-      '/src/assets/images/property_residence_bandra_1792781620671.jpg',
-      '/src/assets/images/hero_luxury_mumbai_pune_1792781619397.jpg',
+      '/images/property_residence_bandra_1792781620671.jpg',
+      '/images/hero_luxury_mumbai_pune_1792781619397.jpg',
     ],
     amenities: ['Sea Facing', 'Fully Furnished', 'Concierge Service', 'Private Deck', 'Heated Jacuzzi', '2 Stilt Parking'],
     isPublished: true,
@@ -50,7 +50,7 @@ let memoryProperties: any[] = [
     bathrooms: 5,
     areaSqFt: 4600,
     images: [
-      '/src/assets/images/property_penta_mumbai_1792781621423.jpg',
+      '/images/property_penta_mumbai_1792781621423.jpg',
     ],
     amenities: ['Arabian Sea View', 'Private Elevator Foyer', 'Clubhouse & Spa', 'Valet Parking', 'Smart Home Automation'],
     isPublished: true,
@@ -76,7 +76,7 @@ let memoryProperties: any[] = [
     bathrooms: 6,
     areaSqFt: 7500,
     images: [
-      '/src/assets/images/property_villa_pune_1792781620081.jpg',
+      '/images/property_villa_pune_1792781620081.jpg',
     ],
     amenities: ['Private Plot & Garden', 'Private Plunge Pool', 'Solar Power Backup', 'Gated Compound', 'Staff Quarters'],
     isPublished: true,
@@ -102,7 +102,7 @@ let memoryProperties: any[] = [
     bathrooms: 3,
     areaSqFt: 2400,
     images: [
-      '/src/assets/images/hero_luxury_mumbai_pune_1792781619397.jpg',
+      '/images/hero_luxury_mumbai_pune_1792781619397.jpg',
     ],
     amenities: ['Clubhouse & Gym', 'Swimming Pool', 'Modular Kitchen', '2 Covered Car Parks', '24/7 Security'],
     isPublished: true,
@@ -128,7 +128,7 @@ let memoryProperties: any[] = [
     bathrooms: 6,
     areaSqFt: 6200,
     images: [
-      '/src/assets/images/property_penta_mumbai_1792781621423.jpg',
+      '/images/property_penta_mumbai_1792781621423.jpg',
     ],
     amenities: ['Private Infinity Pool', '360° Sea View', 'Private Elevator', 'Valet Parking', 'Concierge Desk'],
     isPublished: true,
@@ -154,7 +154,7 @@ let memoryProperties: any[] = [
     bathrooms: 7,
     areaSqFt: 8200,
     images: [
-      '/src/assets/images/property_villa_pune_1792781620081.jpg',
+      '/images/property_villa_pune_1792781620081.jpg',
     ],
     amenities: ['Private Swimming Pool', 'Heritage Trees & Lawn', 'Staff Quarters', 'Home Theater', 'Gated Compound'],
     isPublished: true,
