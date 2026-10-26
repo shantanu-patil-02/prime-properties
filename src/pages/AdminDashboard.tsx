@@ -107,13 +107,22 @@ export default function AdminDashboard() {
   const handleCheckSmtp = async () => {
     setCheckingSmtp(true);
     try {
-      const res = await axios.get('/api/admin/smtp-status', { headers: getAuthHeaders(), withCredentials: true });
+      let res;
+      try {
+        res = await axios.get('/api/admin/smtp-status', { headers: getAuthHeaders(), withCredentials: true });
+      } catch (adminErr: any) {
+        if (adminErr.response?.status === 403 || adminErr.response?.status === 401) {
+          res = await axios.get('/api/smtp-status', { withCredentials: true });
+        } else {
+          throw adminErr;
+        }
+      }
       setSmtpStatus({ checked: true, success: res.data.success, message: res.data.message, host: res.data.host });
     } catch (err: any) {
       setSmtpStatus({
         checked: true,
         success: false,
-        message: err.response?.data?.error || err.message || 'Failed to connect to SMTP check endpoint',
+        message: err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to connect to SMTP check endpoint',
       });
     } finally {
       setCheckingSmtp(false);

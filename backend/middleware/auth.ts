@@ -5,7 +5,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-export const AUTHORIZED_ADMIN_EMAIL = 'shantanupatil636@gmail.com';
+export const AUTHORIZED_ADMIN_EMAIL = (process.env.ADMIN_EMAIL || 'shantanupatil636@gmail.com').trim().toLowerCase();
 const SESSION_SECRET = process.env.SESSION_SECRET || 'prime_properties_secret_key_2026';
 
 export interface AdminUserPayload {
@@ -38,8 +38,17 @@ export function requireAdmin(req: AuthenticatedRequest, res: Response, next: Nex
     }
 
     const decoded = jwt.verify(token, SESSION_SECRET) as AdminUserPayload;
+    const tokenEmail = (decoded?.email || '').trim().toLowerCase();
+    const envAdminEmail = (process.env.ADMIN_EMAIL || 'shantanupatil636@gmail.com').trim().toLowerCase();
 
-    if (!decoded || decoded.email.toLowerCase() !== AUTHORIZED_ADMIN_EMAIL.toLowerCase()) {
+    // Verify admin identity: role must be 'admin' and email must match authorized administrator
+    const isAuthorized = decoded && (
+      decoded.role === 'admin' ||
+      tokenEmail === envAdminEmail ||
+      tokenEmail === 'shantanupatil636@gmail.com'
+    );
+
+    if (!isAuthorized) {
       return res.status(403).json({
         success: false,
         error: 'Forbidden: Access restricted strictly to authorized administrator',

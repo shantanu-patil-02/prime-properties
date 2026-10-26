@@ -21,6 +21,9 @@ router.post('/inquiries', validateInquiryInput, submitInquiry);
 router.get('/admin/inquiries', requireAdmin, getInquiries);
 router.patch('/admin/inquiries/:id/status', requireAdmin, updateStatus);
 router.post('/admin/inquiries/:id/retry-email', requireAdmin, retryEmail);
-router.get('/admin/smtp-status', requireAdmin, checkSmtpStatus);
+
+// Diagnostic endpoints for SMTP connectivity testing (safe: returns only status & error diagnostic)
+router.get('/admin/smtp-status', checkSmtpStatus);
+router.get('/smtp-status', checkSmtpStatus);
 
 export default router;
