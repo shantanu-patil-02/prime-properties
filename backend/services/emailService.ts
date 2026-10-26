@@ -21,7 +21,7 @@ export function getTransporter(): Transporter | null {
   const host = process.env.SMTP_HOST?.trim();
   const user = process.env.SMTP_USER?.trim();
   const pass = process.env.SMTP_PASS?.trim();
-  const port = Number(process.env.SMTP_PORT) || (host?.includes('gmail') ? 465 : 587);
+  const configuredPort = Number(process.env.SMTP_PORT);
 
   if (!host || !user || !pass) {
     return null;
@@ -30,32 +30,35 @@ export function getTransporter(): Transporter | null {
   const isGmail = host.includes('gmail.com') || host.toLowerCase() === 'gmail';
 
   if (isGmail) {
-    // Port 465 uses direct SSL (secure: true); Port 587 uses STARTTLS (secure: false)
-    const isPort587 = port === 587;
+    // For Gmail on cloud hosting (Render, AWS, DigitalOcean), port 465 with direct SSL
+    // is mandatory because cloud platforms throttle or block outbound port 587 STARTTLS.
     return nodemailer.createTransport({
       host: 'smtp.gmail.com',
-      port: isPort587 ? 587 : 465,
-      secure: !isPort587,
+      port: 465,
+      secure: true,
       auth: { user, pass },
-      connectionTimeout: 8000,
-      greetingTimeout: 8000,
-      socketTimeout: 12000,
+      connectionTimeout: 10000,
+      greetingTimeout: 10000,
+      socketTimeout: 15000,
       tls: {
-        rejectUnauthorized: false,
+        rejectUnauthorized: false, // Prevents SSL certificate rejection on containerized cloud hosts
       },
     });
   }
 
+  const port = configuredPort || 587;
+  const isSecure = port === 465;
+
   return nodemailer.createTransport({
     host,
     port,
-    secure: port === 465,
+    secure: isSecure,
     auth: { user, pass },
-    connectionTimeout: 6000,
-    greetingTimeout: 6000,
-    socketTimeout: 10000,
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000,
     tls: {
-      rejectUnauthorized: false, // Prevents certificate verification failures on container hosts
+      rejectUnauthorized: false,
     },
   });
 }
@@ -63,7 +66,13 @@ export function getTransporter(): Transporter | null {
 /**
  * Test SMTP connectivity and return diagnostics
  */
-export async function verifySmtpConnection(): Promise<{ success: boolean; message: string; host?: string; user?: string }> {
+export async function verifySmtpConnection(): Promise<{
+  success: boolean;
+  message: string;
+  host?: string;
+  user?: string;
+  port?: number;
+}> {
   const host = process.env.SMTP_HOST?.trim();
   const user = process.env.SMTP_USER?.trim();
   const pass = process.env.SMTP_PASS?.trim();
@@ -74,6 +83,9 @@ export async function verifySmtpConnection(): Promise<{ success: boolean; messag
       message: 'SMTP credentials missing. Please configure SMTP_HOST, SMTP_USER, and SMTP_PASS in your hosting environment.',
     };
   }
+
+  const isGmail = host.includes('gmail.com') || host.toLowerCase() === 'gmail';
+  const effectivePort = isGmail ? 465 : (Number(process.env.SMTP_PORT) || 587);
 
   const transporter = getTransporter();
   if (!transporter) {
@@ -87,18 +99,19 @@ export async function verifySmtpConnection(): Promise<{ success: boolean; messag
     await transporter.verify();
     return {
       success: true,
-      message: 'SMTP connection established and authenticated successfully.',
+      message: `SMTP connection established and authenticated successfully via port ${effectivePort} (SSL).`,
       host,
       user,
+      port: effectivePort,
     };
   } catch (err: any) {
     let guidance = '';
     const errorMsg = err?.message || String(err);
 
-    if (errorMsg.includes('Username and Password not accepted') || errorMsg.includes('535')) {
-      guidance = ' Gmail requires a 16-character "App Password" (NOT your regular Gmail password). Generate one at: https://myaccount.google.com/apppasswords with 2-Step Verification enabled.';
-    } else if (err.code === 'ETIMEDOUT' || err.code === 'ECONNREFUSED') {
-      guidance = ' Connection timed out. Some cloud hosts block outbound port 587; try setting SMTP_PORT=465.';
+    if (errorMsg.includes('Username and Password not accepted') || errorMsg.includes('535') || errorMsg.includes('BadCredentials')) {
+      guidance = ' Gmail requires a 16-character "App Password" (NOT your regular Gmail account password). Generate one at: https://myaccount.google.com/apppasswords with 2-Step Verification enabled.';
+    } else if (err.code === 'ETIMEDOUT' || err.code === 'ECONNREFUSED' || errorMsg.includes('Connection timeout')) {
+      guidance = ' Connection timed out. Make sure your Render Dashboard has SMTP_PORT=465 and SMTP_HOST=smtp.gmail.com.';
     }
 
     return {
@@ -106,6 +119,7 @@ export async function verifySmtpConnection(): Promise<{ success: boolean; messag
       message: `${errorMsg}.${guidance}`,
       host,
       user,
+      port: effectivePort,
     };
   }
 }

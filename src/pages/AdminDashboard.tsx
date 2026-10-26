@@ -30,6 +30,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { Property, Inquiry, Blog } from '../types';
+import { getImageUrl, FALLBACK_PROPERTY_IMAGE, FALLBACK_BLOG_IMAGE } from '../utils/image';
 
 const APPROVED_LUXURY_IMAGES = [
   { label: 'Worli Mumbai Penthouse', path: '/images/property_penta_mumbai_1792781621423.jpg' },
@@ -569,10 +570,14 @@ export default function AdminDashboard() {
                 <div className="space-y-3">
                   <div className="relative aspect-[16/9] rounded-lg overflow-hidden bg-[#F2EFE9]">
                     <img
-                      src={prop.images?.[0] || APPROVED_LUXURY_IMAGES[0].path}
+                      src={getImageUrl(prop.images?.[0] || APPROVED_LUXURY_IMAGES[0].path, FALLBACK_PROPERTY_IMAGE)}
                       alt={prop.title}
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = FALLBACK_PROPERTY_IMAGE;
+                      }}
                       className="w-full h-full object-cover"
                       referrerPolicy="no-referrer"
+                      loading="lazy"
                     />
                     {/* Demo Label badge */}
                     {prop.title?.includes(' ') && (
@@ -921,10 +926,14 @@ export default function AdminDashboard() {
                       <tr key={blog._id} className="hover:bg-[#FAF8F5]/60 transition-colors">
                         <td className="p-4">
                           <img
-                            src={blog.coverImage || APPROVED_LUXURY_IMAGES[0].path}
+                            src={getImageUrl(blog.coverImage || APPROVED_LUXURY_IMAGES[0].path, FALLBACK_BLOG_IMAGE)}
                             alt={blog.title}
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = FALLBACK_BLOG_IMAGE;
+                            }}
                             className="w-16 h-10 object-cover rounded border border-[#D4AF37]/30"
                             referrerPolicy="no-referrer"
+                            loading="lazy"
                           />
                         </td>
                         <td className="p-4 max-w-xs sm:max-w-md">
@@ -1192,7 +1201,15 @@ export default function AdminDashboard() {
                             isSelected ? 'border-[#D4AF37] scale-105 shadow-md' : 'border-transparent opacity-60'
                           }`}
                         >
-                          <img src={img.path} alt="" className="w-full h-full object-cover" />
+                          <img
+                            src={getImageUrl(img.path, FALLBACK_PROPERTY_IMAGE)}
+                            alt=""
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = FALLBACK_PROPERTY_IMAGE;
+                            }}
+                            className="w-full h-full object-cover"
+                            loading="lazy"
+                          />
                           <span className="absolute bottom-0 inset-x-0 bg-black/70 text-[9px] text-white p-1 truncate text-center">
                             {img.label}
                           </span>
@@ -1669,7 +1686,15 @@ export default function AdminDashboard() {
                           : 'border-transparent opacity-60 hover:opacity-100'
                       }`}
                     >
-                      <img src={img.path} alt={img.label} className="w-full h-14 object-cover rounded" />
+                      <img
+                        src={getImageUrl(img.path, FALLBACK_BLOG_IMAGE)}
+                        alt={img.label}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = FALLBACK_BLOG_IMAGE;
+                        }}
+                        className="w-full h-14 object-cover rounded"
+                        loading="lazy"
+                      />
                       <span className="block text-[10px] text-center text-[#78716C] truncate mt-1">{img.label}</span>
                     </div>
                   ))}
@@ -1824,7 +1849,15 @@ export default function AdminDashboard() {
                           : 'border-transparent opacity-60 hover:opacity-100'
                       }`}
                     >
-                      <img src={img.path} alt={img.label} className="w-full h-14 object-cover rounded" />
+                      <img
+                        src={getImageUrl(img.path, FALLBACK_BLOG_IMAGE)}
+                        alt={img.label}
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = FALLBACK_BLOG_IMAGE;
+                        }}
+                        className="w-full h-14 object-cover rounded"
+                        loading="lazy"
+                      />
                       <span className="block text-[10px] text-center text-[#78716C] truncate mt-1">{img.label}</span>
                     </div>
                   ))}
