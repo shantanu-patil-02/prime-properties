@@ -101,6 +101,25 @@ export default function AdminDashboard() {
     isPublished: true,
   });
 
+  const [smtpStatus, setSmtpStatus] = useState<{ checked: boolean; success: boolean; message: string; host?: string } | null>(null);
+  const [checkingSmtp, setCheckingSmtp] = useState(false);
+
+  const handleCheckSmtp = async () => {
+    setCheckingSmtp(true);
+    try {
+      const res = await axios.get('/api/admin/smtp-status', { headers: getAuthHeaders(), withCredentials: true });
+      setSmtpStatus({ checked: true, success: res.data.success, message: res.data.message, host: res.data.host });
+    } catch (err: any) {
+      setSmtpStatus({
+        checked: true,
+        success: false,
+        message: err.response?.data?.error || err.message || 'Failed to connect to SMTP check endpoint',
+      });
+    } finally {
+      setCheckingSmtp(false);
+    }
+  };
+
   const navigate = useNavigate();
 
   const getAuthHeaders = () => {
@@ -650,10 +669,52 @@ export default function AdminDashboard() {
                 Audit and manage high-net-worth customer leads with direct Nodemailer SMTP notifications to shantanupatil636@gmail.com
               </p>
             </div>
-            <div className="text-xs text-[#78716C] font-medium bg-[#FAF8F5] px-3 py-1.5 rounded-lg border border-[#D4AF37]/20">
-              Showing {filteredInquiries.length} of {inquiries.length} Total Inquiries
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={handleCheckSmtp}
+                disabled={checkingSmtp}
+                className="px-3 py-1.5 bg-[#FAF8F5] border border-[#D4AF37]/40 hover:bg-[#D4AF37]/15 text-[#2C2825] rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-all disabled:opacity-50 cursor-pointer"
+              >
+                <RefreshCw className={`w-3.5 h-3.5 text-[#D4AF37] ${checkingSmtp ? 'animate-spin' : ''}`} />
+                <span>{checkingSmtp ? 'Testing SMTP...' : 'Test SMTP Connection'}</span>
+              </button>
+              <div className="text-xs text-[#78716C] font-medium bg-[#FAF8F5] px-3 py-1.5 rounded-lg border border-[#D4AF37]/20">
+                Showing {filteredInquiries.length} of {inquiries.length} Total Inquiries
+              </div>
             </div>
           </div>
+
+          {/* SMTP Diagnostic Status Banner */}
+          {smtpStatus && (
+            <div
+              className={`mx-6 mt-2 p-4 rounded-xl text-xs border flex items-start justify-between gap-3 shadow-xs ${
+                smtpStatus.success
+                  ? 'bg-emerald-50 text-emerald-900 border-emerald-200'
+                  : 'bg-amber-50 text-amber-900 border-amber-300'
+              }`}
+            >
+              <div className="flex items-start gap-2.5">
+                {smtpStatus.success ? (
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+                )}
+                <div className="space-y-1">
+                  <p className="font-bold">
+                    {smtpStatus.success ? 'SMTP Service Active & Verified' : 'SMTP Connection Diagnostic Result'}
+                  </p>
+                  <p className="leading-relaxed text-[11px] opacity-90">{smtpStatus.message}</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSmtpStatus(null)}
+                className="text-gray-400 hover:text-black shrink-0 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
 
           {/* Filtering and Search Toolbar */}
           <div className="px-6 py-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-3">

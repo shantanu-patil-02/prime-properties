@@ -1,6 +1,6 @@
 /**
  * Email Notification Service using Nodemailer
- * Strictly sends new inquiry alerts to authorized administrator: shantanupatil636@gmail.com
+ * Sends new inquiry alerts to authorized administrator: shantanupatil636@gmail.com
  */
 import nodemailer, { Transporter } from 'nodemailer';
 
@@ -18,13 +18,32 @@ export function setTestTransporter(transporter: Transporter | null) {
 export function getTransporter(): Transporter | null {
   if (customTransporter) return customTransporter;
 
-  const host = process.env.SMTP_HOST;
-  const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
-  const port = Number(process.env.SMTP_PORT) || 587;
+  const host = process.env.SMTP_HOST?.trim();
+  const user = process.env.SMTP_USER?.trim();
+  const pass = process.env.SMTP_PASS?.trim();
+  const port = Number(process.env.SMTP_PORT) || (host?.includes('gmail') ? 465 : 587);
 
   if (!host || !user || !pass) {
     return null;
+  }
+
+  const isGmail = host.includes('gmail.com') || host.toLowerCase() === 'gmail';
+
+  if (isGmail) {
+    // Port 465 uses direct SSL (secure: true); Port 587 uses STARTTLS (secure: false)
+    const isPort587 = port === 587;
+    return nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: isPort587 ? 587 : 465,
+      secure: !isPort587,
+      auth: { user, pass },
+      connectionTimeout: 8000,
+      greetingTimeout: 8000,
+      socketTimeout: 12000,
+      tls: {
+        rejectUnauthorized: false,
+      },
+    });
   }
 
   return nodemailer.createTransport({
@@ -32,7 +51,63 @@ export function getTransporter(): Transporter | null {
     port,
     secure: port === 465,
     auth: { user, pass },
+    connectionTimeout: 6000,
+    greetingTimeout: 6000,
+    socketTimeout: 10000,
+    tls: {
+      rejectUnauthorized: false, // Prevents certificate verification failures on container hosts
+    },
   });
+}
+
+/**
+ * Test SMTP connectivity and return diagnostics
+ */
+export async function verifySmtpConnection(): Promise<{ success: boolean; message: string; host?: string; user?: string }> {
+  const host = process.env.SMTP_HOST?.trim();
+  const user = process.env.SMTP_USER?.trim();
+  const pass = process.env.SMTP_PASS?.trim();
+
+  if (!host || !user || !pass) {
+    return {
+      success: false,
+      message: 'SMTP credentials missing. Please configure SMTP_HOST, SMTP_USER, and SMTP_PASS in your hosting environment.',
+    };
+  }
+
+  const transporter = getTransporter();
+  if (!transporter) {
+    return {
+      success: false,
+      message: 'Failed to initialize email transporter with provided credentials.',
+    };
+  }
+
+  try {
+    await transporter.verify();
+    return {
+      success: true,
+      message: 'SMTP connection established and authenticated successfully.',
+      host,
+      user,
+    };
+  } catch (err: any) {
+    let guidance = '';
+    const errorMsg = err?.message || String(err);
+
+    if (errorMsg.includes('Username and Password not accepted') || errorMsg.includes('535')) {
+      guidance = ' Gmail requires a 16-character "App Password" (NOT your regular Gmail password). Generate one at: https://myaccount.google.com/apppasswords with 2-Step Verification enabled.';
+    } else if (err.code === 'ETIMEDOUT' || err.code === 'ECONNREFUSED') {
+      guidance = ' Connection timed out. Some cloud hosts block outbound port 587; try setting SMTP_PORT=465.';
+    }
+
+    return {
+      success: false,
+      message: `${errorMsg}.${guidance}`,
+      host,
+      user,
+    };
+  }
 }
 
 export interface InquiryEmailPayload {
@@ -57,11 +132,14 @@ export async function sendInquiryAlertEmail(payload: InquiryEmailPayload): Promi
     };
   }
 
-  const appOrigin = process.env.APP_ORIGIN || process.env.APP_URL || 'http://localhost:3000';
+  const appOrigin = process.env.APP_ORIGIN || process.env.APP_URL || 'https://primeproperties.in';
+  const senderUser = process.env.SMTP_USER?.trim() || ADMIN_NOTIFICATION_EMAIL;
+  const mailFromAddress = process.env.MAIL_FROM?.trim() || senderUser;
+
   const mailFrom = {
-  name: 'Prime Properties',
-  address: process.env.MAIL_FROM || process.env.SMTP_USER!,
-};
+    name: 'Prime Properties Advisory Desk',
+    address: mailFromAddress,
+  };
 
   const htmlContent = `
     <div style="font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #FAF8F5; padding: 30px; color: #2C2825;">
@@ -91,7 +169,7 @@ export async function sendInquiryAlertEmail(payload: InquiryEmailPayload): Promi
             </tr>
             <tr style="border-bottom: 1px solid #F2EFE9;">
               <td style="padding: 10px 0; color: #78716C; font-weight: 600;">Email:</td>
-              <td style="padding: 10px 0; color: #2C2825;"><a href="mailto:${payload.email}" style="color: #B38F27;">${payload.email}</a></td>
+              <td style="padding: 10px 0; color: #2C2825;"><a href="mailto:${payload.email}" style="color: #B38F27;">${payload.email || 'Not provided'}</a></td>
             </tr>
             <tr style="border-bottom: 1px solid #F2EFE9;">
               <td style="padding: 10px 0; color: #78716C; font-weight: 600;">Phone:</td>
@@ -111,7 +189,7 @@ export async function sendInquiryAlertEmail(payload: InquiryEmailPayload): Promi
             </tr>
             <tr>
               <td style="padding: 12px 0 6px 0; color: #78716C; font-weight: 600; vertical-align: top;">Message:</td>
-              <td style="padding: 12px 0 6px 0; color: #2C2825; line-height: 1.5;">${payload.message}</td>
+              <td style="padding: 12px 0 6px 0; color: #2C2825; line-height: 1.5;">${payload.message || 'No additional message provided.'}</td>
             </tr>
           </table>
 
@@ -133,22 +211,24 @@ export async function sendInquiryAlertEmail(payload: InquiryEmailPayload): Promi
 
   try {
     await transporter.sendMail({
-      from:mailFrom,
+      from: mailFrom,
       to: ADMIN_NOTIFICATION_EMAIL,
       subject: `[Prime Properties] New Inquiry: ${payload.inquiryType} from ${payload.fullName} (${payload.city})`,
       html: htmlContent,
     });
     return { success: true };
   } catch (err: any) {
+    console.error('[SMTP sendMail Error]:', err.message);
     return {
       success: false,
-      error: err.message,
+      error: err.message || 'SMTP delivery failed',
     };
   }
 }
 
 export default {
   sendInquiryAlertEmail,
+  verifySmtpConnection,
   setTestTransporter,
   getTransporter,
   ADMIN_NOTIFICATION_EMAIL,

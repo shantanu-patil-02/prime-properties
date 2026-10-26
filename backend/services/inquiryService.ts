@@ -149,42 +149,48 @@ export async function createAndProcessInquiry(data: CreateInquiryDto) {
     memoryInquiries.unshift(savedInquiry);
   }
 
-  // Attempt email notification only after the inquiry has been saved.
-  try {
-    const emailResult = await sendInquiryAlertEmail(
-      getNotificationPayload(savedInquiry)
-    );
+  // Attempt email notification asynchronously so client submission never hangs
+  const dispatchPromise = (async () => {
+    try {
+      const emailResult = await sendInquiryAlertEmail(
+        getNotificationPayload(savedInquiry)
+      );
 
-    if (emailResult.success) {
-      savedInquiry.emailNotificationSent = true;
-      savedInquiry.emailError = '';
-    } else {
+      if (emailResult.success) {
+        savedInquiry.emailNotificationSent = true;
+        savedInquiry.emailError = '';
+        console.log(`[SMTP] Alert email dispatched successfully for inquiry: ${savedInquiry._id}`);
+      } else {
+        savedInquiry.emailNotificationSent = false;
+        savedInquiry.emailError = emailResult.error || 'SMTP delivery failed';
+        console.warn(`[SMTP Warning] Inquiry ${savedInquiry._id}: ${emailResult.error}`);
+      }
+
+      savedInquiry.notificationAttempts = (savedInquiry.notificationAttempts || 0) + 1;
+      savedInquiry.lastNotificationAttemptAt = new Date();
+
+      if (isConnected() && typeof savedInquiry.save === 'function') {
+        await savedInquiry.save();
+      }
+    } catch (err: any) {
+      console.warn('[Inquiry Notification Error]:', err.message);
+
       savedInquiry.emailNotificationSent = false;
-      savedInquiry.emailError =
-        emailResult.error || 'SMTP delivery failed';
+      savedInquiry.emailError = err.message || 'Unknown email notification error';
+      savedInquiry.notificationAttempts = (savedInquiry.notificationAttempts || 0) + 1;
+      savedInquiry.lastNotificationAttemptAt = new Date();
+
+      if (isConnected() && typeof savedInquiry.save === 'function') {
+        await savedInquiry.save();
+      }
     }
+  })();
 
-    savedInquiry.notificationAttempts =
-      (savedInquiry.notificationAttempts || 0) + 1;
-    savedInquiry.lastNotificationAttemptAt = new Date();
-
-    if (isConnected()) {
-      await savedInquiry.save();
-    }
-  } catch (err: any) {
-    console.warn('[Inquiry Notification Error]:', err.message);
-
-    savedInquiry.emailNotificationSent = false;
-    savedInquiry.emailError =
-      err.message || 'Unknown email notification error';
-    savedInquiry.notificationAttempts =
-      (savedInquiry.notificationAttempts || 0) + 1;
-    savedInquiry.lastNotificationAttemptAt = new Date();
-
-    if (isConnected()) {
-      await savedInquiry.save();
-    }
-  }
+  // Await at most 1 second: if SMTP sends instantly, update the response; otherwise let it finish in background
+  await Promise.race([
+    dispatchPromise,
+    new Promise((resolve) => setTimeout(resolve, 1000)),
+  ]);
 
   return savedInquiry;
 }

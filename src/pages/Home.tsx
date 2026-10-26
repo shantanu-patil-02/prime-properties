@@ -5,6 +5,7 @@ import { ArrowRight, ShieldCheck, Award, Building2, Sparkles, CheckCircle2, Chev
 import PropertyCard from '../components/PropertyCard';
 import SEOHead from '../components/SEOHead';
 import { Property, Blog } from '../types';
+import { getImageUrl, FALLBACK_BLOG_IMAGE } from '../utils/image';
 
 function AnimatedCounter({ end, duration = 2000, prefix = '', suffix = '' }: { end: number; duration?: number; prefix?: string; suffix?: string }) {
   const [count, setCount] = useState(0);
@@ -545,10 +546,14 @@ export default function Home() {
               >
                 <div className="sm:w-1/2 aspect-[4/3] sm:aspect-auto overflow-hidden bg-[#F2EFE9]">
                   <img
-                    src={blog.coverImage}
+                    src={getImageUrl(blog.coverImage, FALLBACK_BLOG_IMAGE)}
                     alt={blog.title}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = FALLBACK_BLOG_IMAGE;
+                    }}
                     className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-700 ease-out"
                     referrerPolicy="no-referrer"
+                    loading="lazy"
                   />
                 </div>
                 <div className="sm:w-1/2 p-6 flex flex-col justify-between space-y-4">
