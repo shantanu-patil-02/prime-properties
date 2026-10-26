@@ -93,7 +93,7 @@ export interface InquiryEmailPayload {
  * Generates the luxury-branded HTML email matching Prime Properties aesthetics
  */
 export function generateInquiryEmailHtml(payload: InquiryEmailPayload): string {
-  const appOrigin = process.env.APP_ORIGIN || process.env.APP_URL || 'https://primeproperties.in';
+  const appOrigin = process.env.APP_ORIGIN || process.env.APP_URL || 'https://prime-properties-six.vercel.app/admin';
 
   return `
     <div style="font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #FAF8F5; padding: 30px; color: #2C2825;">
