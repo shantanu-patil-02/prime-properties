@@ -102,31 +102,38 @@ export default function AdminDashboard() {
     isPublished: true,
   });
 
-  const [smtpStatus, setSmtpStatus] = useState<{ checked: boolean; success: boolean; message: string; host?: string } | null>(null);
-  const [checkingSmtp, setCheckingSmtp] = useState(false);
+  const [emailStatus, setEmailStatus] = useState<{ checked: boolean; success: boolean; provider?: string; message: string; host?: string; sender?: string } | null>(null);
+  const [checkingEmail, setCheckingEmail] = useState(false);
 
-  const handleCheckSmtp = async () => {
-    setCheckingSmtp(true);
+  const handleCheckEmail = async () => {
+    setCheckingEmail(true);
     try {
       let res;
       try {
-        res = await axios.get('/api/admin/smtp-status', { headers: getAuthHeaders(), withCredentials: true });
+        res = await axios.get('/api/admin/email-status', { headers: getAuthHeaders(), withCredentials: true });
       } catch (adminErr: any) {
         if (adminErr.response?.status === 403 || adminErr.response?.status === 401) {
-          res = await axios.get('/api/smtp-status', { withCredentials: true });
+          res = await axios.get('/api/email-status', { withCredentials: true });
         } else {
           throw adminErr;
         }
       }
-      setSmtpStatus({ checked: true, success: res.data.success, message: res.data.message, host: res.data.host });
+      setEmailStatus({
+        checked: true,
+        success: res.data.success,
+        provider: res.data.provider,
+        message: res.data.message,
+        host: res.data.host,
+        sender: res.data.sender,
+      });
     } catch (err: any) {
-      setSmtpStatus({
+      setEmailStatus({
         checked: true,
         success: false,
-        message: err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to connect to SMTP check endpoint',
+        message: err.response?.data?.message || err.response?.data?.error || err.message || 'Failed to connect to email check endpoint',
       });
     } finally {
-      setCheckingSmtp(false);
+      setCheckingEmail(false);
     }
   };
 
@@ -680,18 +687,18 @@ export default function AdminDashboard() {
             <div>
               <h3 className="font-serif text-xl font-bold text-[#2C2825]">Customer Inquiries & Notification Log</h3>
               <p className="text-xs text-[#78716C] mt-0.5">
-                Audit and manage high-net-worth customer leads with direct Nodemailer SMTP notifications to shantanupatil636@gmail.com
+                Audit and manage high-net-worth customer leads with direct email notifications via Resend to shantanupatil636@gmail.com
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <button
                 type="button"
-                onClick={handleCheckSmtp}
-                disabled={checkingSmtp}
+                onClick={handleCheckEmail}
+                disabled={checkingEmail}
                 className="px-3 py-1.5 bg-[#FAF8F5] border border-[#D4AF37]/40 hover:bg-[#D4AF37]/15 text-[#2C2825] rounded-lg text-xs font-semibold flex items-center gap-1.5 shadow-2xs transition-all disabled:opacity-50 cursor-pointer"
               >
-                <RefreshCw className={`w-3.5 h-3.5 text-[#D4AF37] ${checkingSmtp ? 'animate-spin' : ''}`} />
-                <span>{checkingSmtp ? 'Testing SMTP...' : 'Test SMTP Connection'}</span>
+                <RefreshCw className={`w-3.5 h-3.5 text-[#D4AF37] ${checkingEmail ? 'animate-spin' : ''}`} />
+                <span>{checkingEmail ? 'Testing Resend...' : 'Test Email Dispatch (Resend)'}</span>
               </button>
               <div className="text-xs text-[#78716C] font-medium bg-[#FAF8F5] px-3 py-1.5 rounded-lg border border-[#D4AF37]/20">
                 Showing {filteredInquiries.length} of {inquiries.length} Total Inquiries
@@ -699,30 +706,37 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* SMTP Diagnostic Status Banner */}
-          {smtpStatus && (
+          {/* Email Diagnostic Status Banner */}
+          {emailStatus && (
             <div
               className={`mx-6 mt-2 p-4 rounded-xl text-xs border flex items-start justify-between gap-3 shadow-xs ${
-                smtpStatus.success
+                emailStatus.success
                   ? 'bg-emerald-50 text-emerald-900 border-emerald-200'
                   : 'bg-amber-50 text-amber-900 border-amber-300'
               }`}
             >
               <div className="flex items-start gap-2.5">
-                {smtpStatus.success ? (
+                {emailStatus.success ? (
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
                 ) : (
                   <AlertCircle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
                 )}
                 <div className="space-y-1">
-                  <p className="font-bold">
-                    {smtpStatus.success ? 'SMTP Service Active & Verified' : 'SMTP Connection Diagnostic Result'}
-                  </p>
-                  <p className="leading-relaxed text-[11px] opacity-90">{smtpStatus.message}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-bold">
+                      {emailStatus.success ? 'Email Dispatch Verified & Active' : 'Email Diagnostic Notice'}
+                    </p>
+                    {emailStatus.provider && (
+                      <span className="uppercase text-[10px] font-bold px-2 py-0.5 rounded bg-black/10 text-[#2C2825]">
+                        {emailStatus.provider}
+                      </span>
+                    )}
+                  </div>
+                  <p className="leading-relaxed text-[11px] opacity-90">{emailStatus.message}</p>
                 </div>
               </div>
               <button
-                onClick={() => setSmtpStatus(null)}
+                onClick={() => setEmailStatus(null)}
                 className="text-gray-400 hover:text-black shrink-0 cursor-pointer"
               >
                 <X className="w-4 h-4" />

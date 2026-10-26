@@ -159,11 +159,11 @@ export async function createAndProcessInquiry(data: CreateInquiryDto) {
       if (emailResult.success) {
         savedInquiry.emailNotificationSent = true;
         savedInquiry.emailError = '';
-        console.log(`[SMTP] Alert email dispatched successfully for inquiry: ${savedInquiry._id}`);
+        console.log(`[Email Notification] Alert dispatched successfully via ${emailResult.provider || 'Resend'} for inquiry: ${savedInquiry._id}`);
       } else {
         savedInquiry.emailNotificationSent = false;
-        savedInquiry.emailError = emailResult.error || 'SMTP delivery failed';
-        console.warn(`[SMTP Warning] Inquiry ${savedInquiry._id}: ${emailResult.error}`);
+        savedInquiry.emailError = emailResult.error || 'Email delivery failed';
+        console.warn(`[Email Notification Warning] Inquiry ${savedInquiry._id}: ${emailResult.error}`);
       }
 
       savedInquiry.notificationAttempts = (savedInquiry.notificationAttempts || 0) + 1;

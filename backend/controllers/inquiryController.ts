@@ -5,16 +5,18 @@
  */
 import { Request, Response, NextFunction } from 'express';
 import inquiryService from '../services/inquiryService.ts';
-import { verifySmtpConnection } from '../services/emailService.ts';
+import { verifyEmailConnection } from '../services/emailService.ts';
 
-export async function checkSmtpStatus(_req: Request, res: Response, next: NextFunction) {
+export async function checkEmailStatus(_req: Request, res: Response, next: NextFunction) {
   try {
-    const result = await verifySmtpConnection();
+    const result = await verifyEmailConnection();
     return res.json(result);
   } catch (err: any) {
     next(err);
   }
 }
+
+export const checkSmtpStatus = checkEmailStatus;
 
 export async function submitInquiry(req: Request, res: Response, next: NextFunction) {
   try {

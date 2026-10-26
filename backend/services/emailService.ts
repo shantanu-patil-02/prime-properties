@@ -1,20 +1,36 @@
 /**
- * Email Notification Service using Nodemailer
- * Sends new inquiry alerts to authorized administrator: shantanupatil636@gmail.com
+ * Email Notification Service using Resend (Primary) with SMTP Fallback
+ * Sends luxury inquiry alert emails to authorized administrator: shantanupatil636@gmail.com
  */
+import { Resend } from 'resend';
 import nodemailer, { Transporter } from 'nodemailer';
 
-export const ADMIN_NOTIFICATION_EMAIL = process.env.ADMIN_EMAIL || 'shantanupatil636@gmail.com';
+export const ADMIN_NOTIFICATION_EMAIL = (process.env.ADMIN_EMAIL || 'shantanupatil636@gmail.com').trim().toLowerCase();
 
 let customTransporter: Transporter | null = null;
+let customResend: Resend | null = null;
 
-/**
- * Configure or override transporter (used in testing or custom SMTP)
- */
 export function setTestTransporter(transporter: Transporter | null) {
   customTransporter = transporter;
 }
 
+export function setTestResend(client: Resend | null) {
+  customResend = client;
+}
+
+/**
+ * Initializes the Resend client
+ */
+export function getResendClient(): Resend | null {
+  if (customResend) return customResend;
+  const apiKey = process.env.RESEND_API_KEY?.trim();
+  if (!apiKey) return null;
+  return new Resend(apiKey);
+}
+
+/**
+ * Legacy SMTP Transporter fallback
+ */
 export function getTransporter(): Transporter | null {
   if (customTransporter) return customTransporter;
 
@@ -30,18 +46,16 @@ export function getTransporter(): Transporter | null {
   const isGmail = host.includes('gmail.com') || host.toLowerCase() === 'gmail';
 
   if (isGmail) {
-    // For Gmail on cloud hosting (Render, AWS, DigitalOcean), port 465 with direct SSL
-    // is mandatory because cloud platforms throttle or block outbound port 587 STARTTLS.
     return nodemailer.createTransport({
       host: 'smtp.gmail.com',
       port: 465,
       secure: true,
       auth: { user, pass },
-      connectionTimeout: 10000,
-      greetingTimeout: 10000,
-      socketTimeout: 15000,
+      connectionTimeout: 8000,
+      greetingTimeout: 8000,
+      socketTimeout: 12000,
       tls: {
-        rejectUnauthorized: false, // Prevents SSL certificate rejection on containerized cloud hosts
+        rejectUnauthorized: false,
       },
     });
   }
@@ -54,74 +68,13 @@ export function getTransporter(): Transporter | null {
     port,
     secure: isSecure,
     auth: { user, pass },
-    connectionTimeout: 10000,
-    greetingTimeout: 10000,
-    socketTimeout: 15000,
+    connectionTimeout: 8000,
+    greetingTimeout: 8000,
+    socketTimeout: 12000,
     tls: {
       rejectUnauthorized: false,
     },
   });
-}
-
-/**
- * Test SMTP connectivity and return diagnostics
- */
-export async function verifySmtpConnection(): Promise<{
-  success: boolean;
-  message: string;
-  host?: string;
-  user?: string;
-  port?: number;
-}> {
-  const host = process.env.SMTP_HOST?.trim();
-  const user = process.env.SMTP_USER?.trim();
-  const pass = process.env.SMTP_PASS?.trim();
-
-  if (!host || !user || !pass) {
-    return {
-      success: false,
-      message: 'SMTP credentials missing. Please configure SMTP_HOST, SMTP_USER, and SMTP_PASS in your hosting environment.',
-    };
-  }
-
-  const isGmail = host.includes('gmail.com') || host.toLowerCase() === 'gmail';
-  const effectivePort = isGmail ? 465 : (Number(process.env.SMTP_PORT) || 587);
-
-  const transporter = getTransporter();
-  if (!transporter) {
-    return {
-      success: false,
-      message: 'Failed to initialize email transporter with provided credentials.',
-    };
-  }
-
-  try {
-    await transporter.verify();
-    return {
-      success: true,
-      message: `SMTP connection established and authenticated successfully via port ${effectivePort} (SSL).`,
-      host,
-      user,
-      port: effectivePort,
-    };
-  } catch (err: any) {
-    let guidance = '';
-    const errorMsg = err?.message || String(err);
-
-    if (errorMsg.includes('Username and Password not accepted') || errorMsg.includes('535') || errorMsg.includes('BadCredentials')) {
-      guidance = ' Gmail requires a 16-character "App Password" (NOT your regular Gmail account password). Generate one at: https://myaccount.google.com/apppasswords with 2-Step Verification enabled.';
-    } else if (err.code === 'ETIMEDOUT' || err.code === 'ECONNREFUSED' || errorMsg.includes('Connection timeout')) {
-      guidance = ' Connection timed out. Make sure your Render Dashboard has SMTP_PORT=465 and SMTP_HOST=smtp.gmail.com.';
-    }
-
-    return {
-      success: false,
-      message: `${errorMsg}.${guidance}`,
-      host,
-      user,
-      port: effectivePort,
-    };
-  }
 }
 
 export interface InquiryEmailPayload {
@@ -136,26 +89,13 @@ export interface InquiryEmailPayload {
   createdAt?: Date;
 }
 
-export async function sendInquiryAlertEmail(payload: InquiryEmailPayload): Promise<{ success: boolean; error?: string }> {
-  const transporter = getTransporter();
-
-  if (!transporter) {
-    return {
-      success: false,
-      error: 'SMTP credentials not configured in environment (SMTP_HOST, SMTP_USER, SMTP_PASS)',
-    };
-  }
-
+/**
+ * Generates the luxury-branded HTML email matching Prime Properties aesthetics
+ */
+export function generateInquiryEmailHtml(payload: InquiryEmailPayload): string {
   const appOrigin = process.env.APP_ORIGIN || process.env.APP_URL || 'https://primeproperties.in';
-  const senderUser = process.env.SMTP_USER?.trim() || ADMIN_NOTIFICATION_EMAIL;
-  const mailFromAddress = process.env.MAIL_FROM?.trim() || senderUser;
 
-  const mailFrom = {
-    name: 'Prime Properties Advisory Desk',
-    address: mailFromAddress,
-  };
-
-  const htmlContent = `
+  return `
     <div style="font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #FAF8F5; padding: 30px; color: #2C2825;">
       <div style="max-width: 600px; margin: 0 auto; background-color: #FFFFFF; border: 1px solid #D4AF37; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
         
@@ -222,28 +162,216 @@ export async function sendInquiryAlertEmail(payload: InquiryEmailPayload): Promi
       </div>
     </div>
   `;
-
-  try {
-    await transporter.sendMail({
-      from: mailFrom,
-      to: ADMIN_NOTIFICATION_EMAIL,
-      subject: `[Prime Properties] New Inquiry: ${payload.inquiryType} from ${payload.fullName} (${payload.city})`,
-      html: htmlContent,
-    });
-    return { success: true };
-  } catch (err: any) {
-    console.error('[SMTP sendMail Error]:', err.message);
-    return {
-      success: false,
-      error: err.message || 'SMTP delivery failed',
-    };
-  }
 }
+
+/**
+ * Sends an inquiry alert email using Resend (default) or SMTP (fallback)
+ */
+export async function sendInquiryAlertEmail(
+  payload: InquiryEmailPayload
+): Promise<{ success: boolean; provider: 'resend' | 'smtp' | 'none'; id?: string; error?: string }> {
+  const htmlContent = generateInquiryEmailHtml(payload);
+  const subject = `[Prime Properties] New Inquiry: ${payload.inquiryType} from ${payload.fullName} (${payload.city})`;
+
+  // 1. Try Resend First (Recommended method)
+  const resend = getResendClient();
+  if (resend) {
+    try {
+      // By default, Resend provides 'onboarding@resend.dev' for instant delivery to your registered account
+      // Or user can provide their verified domain in MAIL_FROM (e.g., 'advisory@yourdomain.com')
+      const fromAddress =
+        process.env.MAIL_FROM?.trim() || 'Prime Properties <onboarding@resend.dev>';
+
+      const { data, error } = await resend.emails.send({
+        from: fromAddress,
+        to: [ADMIN_NOTIFICATION_EMAIL],
+        subject,
+        html: htmlContent,
+      });
+
+      if (error) {
+        console.error('[Resend Error]:', error);
+        return {
+          success: false,
+          provider: 'resend',
+          error: error.message || 'Resend email delivery failed',
+        };
+      }
+
+      console.log(`[Resend] Alert dispatched successfully. Message ID: ${data?.id}`);
+      return {
+        success: true,
+        provider: 'resend',
+        id: data?.id,
+      };
+    } catch (resendErr: any) {
+      console.error('[Resend Exception]:', resendErr);
+      return {
+        success: false,
+        provider: 'resend',
+        error: resendErr.message || 'Resend service exception',
+      };
+    }
+  }
+
+  // 2. Fallback to SMTP if RESEND_API_KEY is not set
+  const transporter = getTransporter();
+  if (transporter) {
+    try {
+      const senderUser = process.env.SMTP_USER?.trim() || ADMIN_NOTIFICATION_EMAIL;
+      const mailFromAddress = process.env.MAIL_FROM?.trim() || senderUser;
+
+      const info = await transporter.sendMail({
+        from: {
+          name: 'Prime Properties Advisory Desk',
+          address: mailFromAddress,
+        },
+        to: ADMIN_NOTIFICATION_EMAIL,
+        subject,
+        html: htmlContent,
+      });
+
+      console.log(`[SMTP] Alert dispatched successfully. Message ID: ${info?.messageId}`);
+      return {
+        success: true,
+        provider: 'smtp',
+        id: info?.messageId,
+      };
+    } catch (smtpErr: any) {
+      console.error('[SMTP sendMail Error]:', smtpErr.message);
+      return {
+        success: false,
+        provider: 'smtp',
+        error: smtpErr.message || 'SMTP delivery failed',
+      };
+    }
+  }
+
+  // Neither Resend nor SMTP is configured
+  return {
+    success: false,
+    provider: 'none',
+    error: 'No email service configured. Please set RESEND_API_KEY in your environment variables.',
+  };
+}
+
+/**
+ * Test email connectivity (Resend or SMTP) and return diagnostics
+ */
+export async function verifyEmailConnection(): Promise<{
+  success: boolean;
+  provider: 'resend' | 'smtp' | 'none';
+  message: string;
+  sender?: string;
+  recipient?: string;
+}> {
+  const resendApiKey = process.env.RESEND_API_KEY?.trim();
+
+  // 1. Diagnose Resend
+  if (resendApiKey) {
+    if (!resendApiKey.startsWith('re_')) {
+      return {
+        success: false,
+        provider: 'resend',
+        message: 'Invalid RESEND_API_KEY format. Resend API keys must start with "re_". Obtain one at https://resend.com/api-keys',
+        recipient: ADMIN_NOTIFICATION_EMAIL,
+      };
+    }
+
+    try {
+      const resend = getResendClient();
+      if (!resend) {
+        return {
+          success: false,
+          provider: 'resend',
+          message: 'Failed to initialize Resend client with provided API key.',
+        };
+      }
+
+      // Validate the API key against the Resend API
+      const apiKeysList = await resend.apiKeys.list();
+      if (apiKeysList.error) {
+        return {
+          success: false,
+          provider: 'resend',
+          message: `Resend authentication failed: ${apiKeysList.error.message}`,
+          recipient: ADMIN_NOTIFICATION_EMAIL,
+        };
+      }
+
+      const sender = process.env.MAIL_FROM?.trim() || 'Prime Properties <onboarding@resend.dev>';
+      return {
+        success: true,
+        provider: 'resend',
+        message: 'Resend HTTP API connection established and authenticated successfully. Inquiries will be delivered directly via Resend (Port 443 HTTPS).',
+        sender,
+        recipient: ADMIN_NOTIFICATION_EMAIL,
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        provider: 'resend',
+        message: `Resend API check error: ${err.message || String(err)}`,
+        recipient: ADMIN_NOTIFICATION_EMAIL,
+      };
+    }
+  }
+
+  // 2. Diagnose SMTP if configured
+  const host = process.env.SMTP_HOST?.trim();
+  const user = process.env.SMTP_USER?.trim();
+  const pass = process.env.SMTP_PASS?.trim();
+
+  if (host && user && pass) {
+    const transporter = getTransporter();
+    if (!transporter) {
+      return {
+        success: false,
+        provider: 'smtp',
+        message: 'Failed to initialize SMTP transporter with provided credentials.',
+      };
+    }
+    try {
+      await transporter.verify();
+      return {
+        success: true,
+        provider: 'smtp',
+        message: `SMTP connection established and authenticated successfully via ${host}.`,
+        sender: user,
+        recipient: ADMIN_NOTIFICATION_EMAIL,
+      };
+    } catch (err: any) {
+      return {
+        success: false,
+        provider: 'smtp',
+        message: `SMTP verification failed: ${err.message}. Consider switching to Resend (set RESEND_API_KEY) to bypass cloud host port blocking.`,
+        recipient: ADMIN_NOTIFICATION_EMAIL,
+      };
+    }
+  }
+
+  // Neither is configured
+  return {
+    success: false,
+    provider: 'none',
+    message: 'Resend API key missing. In your Render Dashboard, add RESEND_API_KEY (from https://resend.com/api-keys).',
+    recipient: ADMIN_NOTIFICATION_EMAIL,
+  };
+}
+
+/**
+ * Backward compatibility alias for existing code
+ */
+export const verifySmtpConnection = verifyEmailConnection;
 
 export default {
   sendInquiryAlertEmail,
+  verifyEmailConnection,
   verifySmtpConnection,
-  setTestTransporter,
+  getResendClient,
   getTransporter,
+  setTestResend,
+  setTestTransporter,
+  generateInquiryEmailHtml,
   ADMIN_NOTIFICATION_EMAIL,
 };
